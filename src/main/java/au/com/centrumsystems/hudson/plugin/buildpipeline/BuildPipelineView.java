@@ -252,7 +252,8 @@ public class BuildPipelineView extends View {
     public BuildPipelineView(final String name, final String buildViewTitle, final ProjectGridBuilder gridBuilder,
             final String noOfDisplayedBuilds,
             final boolean triggerOnlyLatestJob, final boolean alwaysAllowManualTrigger, final boolean showPipelineParameters,
-            final boolean showPipelineParametersInHeaders, final boolean showPipelineDefinitionHeader, final int refreshFrequency, final String cssUrl) {
+            final boolean showPipelineParametersInHeaders, final boolean showPipelineDefinitionHeader,
+            final int refreshFrequency, final String cssUrl) {
         this(name, buildViewTitle, gridBuilder, noOfDisplayedBuilds, triggerOnlyLatestJob, cssUrl);
         this.alwaysAllowManualTrigger = alwaysAllowManualTrigger;
         this.showPipelineParameters = showPipelineParameters;
@@ -490,7 +491,10 @@ public class BuildPipelineView extends View {
         LOGGER.fine("Triggering build for project: " + triggerProject.getFullDisplayName()); //$NON-NLS-1$
         final Cause.UpstreamCause upstreamCause = (null == upstreamBuild) ? null : new Cause.UpstreamCause((Run<?, ?>) upstreamBuild);
         final List<Action> buildActions = new ArrayList<Action>();
-        buildActions.add(new CauseAction(new MyUserIdCause()));
+        final CauseAction causeAction = new CauseAction(new MyUserIdCause());
+        // TODO hack obsolete as of 1.531 when CauseAction.<init>(Cause...) available:
+        causeAction.getCauses().add(upstreamCause);
+        buildActions.add(causeAction);
         ParametersAction parametersAction =
                 buildParametersAction instanceof ParametersAction
                         ? (ParametersAction) buildParametersAction : new ParametersAction();
@@ -521,7 +525,7 @@ public class BuildPipelineView extends View {
 
         buildActions.add(parametersAction);
 
-        triggerProject.scheduleBuild(triggerProject.getQuietPeriod(), upstreamCause, buildActions.toArray(new Action[buildActions.size()]));
+        triggerProject.scheduleBuild(triggerProject.getQuietPeriod(), null, buildActions.toArray(new Action[buildActions.size()]));
         return triggerProject.getNextBuildNumber();
     }
 
