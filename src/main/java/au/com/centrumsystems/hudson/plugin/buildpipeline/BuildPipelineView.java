@@ -95,6 +95,9 @@ public class BuildPipelineView extends View {
     /** buildViewTitle. */
     private String buildViewTitle = ""; //$NON-NLS-1$
 
+    /** consoleOutputLinkStyle. */
+    private String consoleOutputLinkStyle = LinkStyle.LIGHTBOX;
+
     /** URL for custom CSS file */
     private String cssUrl = "";
 
@@ -639,6 +642,18 @@ public class BuildPipelineView extends View {
             return options;
         }
 
+        /**
+         * Display Console Output Link Style Items in the Edit View Page
+         *
+         * @return ListBoxModel
+         */
+        public ListBoxModel doFillConsoleOutputLinkStyleItems() {
+            final hudson.util.ListBoxModel options = new hudson.util.ListBoxModel();
+            options.add(LinkStyle.LIGHTBOX);
+            options.add(LinkStyle.NEW_WINDOW);
+            options.add(LinkStyle.THIS_WINDOW);
+            return options;
+        }
     }
 
     public String getBuildViewTitle() {
@@ -663,6 +678,22 @@ public class BuildPipelineView extends View {
 
     public void setNoOfDisplayedBuilds(final String noOfDisplayedBuilds) {
         this.noOfDisplayedBuilds = noOfDisplayedBuilds;
+    }
+
+    public String getConsoleOutputLinkStyle() {
+        return consoleOutputLinkStyle;
+    }
+
+    public void setConsoleOutputLinkStyle(String consoleOutputLinkStyle) {
+        this.consoleOutputLinkStyle = consoleOutputLinkStyle;
+    }
+
+    public boolean isNewWindowConsoleOutputLinkStyle() {
+        return LinkStyle.NEW_WINDOW.equals(consoleOutputLinkStyle);
+    }
+
+    public boolean isThisWindowConsoleOutputLinkStyle() {
+        return LinkStyle.THIS_WINDOW.equals(consoleOutputLinkStyle);
     }
 
     public boolean isTriggerOnlyLatestJob() {
@@ -771,5 +802,17 @@ public class BuildPipelineView extends View {
     @Override
     public Item doCreateItem(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ServletException {
         return Hudson.getInstance().doCreateItem(req, rsp);
+    }
+
+    /**
+     * A class that groups together the console output link style options
+     */
+    private static final class LinkStyle {
+        /** lightbox link style option */
+        static final String LIGHTBOX = "Lightbox"; //$NON-NLS-1$
+        /** new window link style option */
+        static final String NEW_WINDOW = "New Window"; //$NON-NLS-1$
+        /** this window link style option */
+        static final String THIS_WINDOW = "This Window"; //$NON-NLS-1$
     }
 }
