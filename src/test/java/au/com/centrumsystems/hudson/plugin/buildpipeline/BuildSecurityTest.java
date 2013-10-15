@@ -1,7 +1,7 @@
 package au.com.centrumsystems.hudson.plugin.buildpipeline;
 
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.Condition;
+import au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.PipelineHtmlPage;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import hudson.security.GlobalMatrixAuthorizationStrategy;
@@ -12,6 +12,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import static au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.TestUtils.waitFor;
+import static hudson.model.Result.SUCCESS;
 import static org.junit.Assert.*;
 
 public class BuildSecurityTest {
@@ -28,6 +30,8 @@ public class BuildSecurityTest {
     JenkinsRule.WebClient webClient;
     FreeStyleProject initialJob;
     BuildPipelineView pipelineView;
+
+    PipelineHtmlPage pipelinePage;
 
     @Before
     public void init() throws Exception {
@@ -47,37 +51,43 @@ public class BuildSecurityTest {
 
         pipelineView = new BuildPipelineView("pipeline", "Pipeline", new DownstreamProjectGridBuilder(INITIAL_JOB), "5", false, null);
         jr.jenkins.addView(pipelineView);
+
+        pipelinePage = new PipelineHtmlPage(pipelineView, jr.createWebClient());
     }
 
     @Test
     public void pipelineShouldNotShowRunButtonIfUserNotPermittedToTriggerBuild() throws Exception {
-        HtmlPage pipelineViewPage = loggedInAs(UNPRIVILEGED_USER).getPage(pipelineView);
-        HtmlElement runButton = runButtonOn(pipelineViewPage);
-        assertNull("The Run button should not be present", runButton);
+        assertFalse("The Run button should not be present",
+                pipelinePage.viewedAs(UNPRIVILEGED_USER).runButtonIsPresent());
     }
 
     @Test
     public void pipelineShouldShowRunButtonIfUserPermittedToTriggerBuild() throws Exception {
-        HtmlPage pipelineViewPage = loggedInAs(PRIVILEGED_USER).getPage(pipelineView);
-        HtmlElement runButton = runButtonOn(pipelineViewPage);
-        assertNotNull("The Run button should be present", runButton);
+        assertTrue("The Run button should be present",
+                pipelinePage.viewedAs(PRIVILEGED_USER).runButtonIsPresent());
     }
 
     @Test
     public void shouldNotBeAbleToTriggerDownstreamJobIfNotPermitted() throws Exception {
-        HtmlPage pipelineViewPage = loggedInAs(PRIVILEGED_USER).getPage(pipelineView);
-        runButtonOn(pipelineViewPage).click();
+        pipelinePage.viewedAs(PRIVILEGED_USER).clickRunButton();
+        waitFor(initialBuildToSucceed());
+        pipelinePage.reload();
 
-
+        assertFalse("Second card in pipeline should not have a trigger button",
+                pipelinePage.buildCard(1, 1, 2).hasManualTriggerButton());
     }
 
-    private HtmlElement runButtonOn(HtmlPage pipelineViewPage) {
-        return pipelineViewPage.getElementById("trigger-pipeline-button");
-    }
+    private Condition initialBuildToSucceed() {
+        return new Condition() {
+            @Override
+            public boolean isSatisfied() throws Exception {
+                return initialJob.getBuilds().getFirstBuild().getResult().isBetterOrEqualTo(SUCCESS);
+            }
 
-    private JenkinsRule.WebClient loggedInAs(String user) throws Exception {
-        return webClient.login(user, user);
+            @Override
+            public String describe() {
+                return "Initial build has succeeded";
+            }
+        };
     }
-
-    
 }
