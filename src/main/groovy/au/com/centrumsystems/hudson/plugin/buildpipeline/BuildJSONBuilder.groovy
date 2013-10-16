@@ -26,7 +26,7 @@ class BuildJSONBuilder {
 				isSuccess(buildStatus == 'SUCCESS')
 				isReadyToBeManuallyBuilt(pipelineBuild.isReadyToBeManuallyBuilt())
 				isManualTrigger(pipelineBuild.isManualTrigger())
-				isRerunable(buildStatus != 'PENDING' && buildStatus != 'BUILDING' && !pipelineBuild.isReadyToBeManuallyBuilt())
+				isRerunable(pipelineBuild.isRerunnable())
 				isLatestBuild(null != pipelineBuild.currentBuild?.number && pipelineBuild.currentBuild?.number == pipelineBuild.project.getLastBuild()?.number)
 				isUpstreamBuildLatest(null != pipelineBuild.upstreamBuild?.number && pipelineBuild.upstreamBuild?.number == pipelineBuild.upstreamPipelineBuild?.project?.getLastBuild()?.number)
 				isUpstreamBuildLatestSuccess(null != pipelineBuild.upstreamBuild?.number && pipelineBuild.upstreamBuild?.number == pipelineBuild.upstreamPipelineBuild?.project?.lastSuccessfulBuild?.number)

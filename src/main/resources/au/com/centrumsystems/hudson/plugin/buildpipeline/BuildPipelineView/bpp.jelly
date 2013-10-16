@@ -99,6 +99,8 @@
 							</j:choose>
 						{{/unless}}
 					{{/unless}}
+
+
 					{{#if build.isRerunable}}
 						{{#if build.isSuccess}}
 							{{#if ${!from.triggerOnlyLatestJob}}}
