@@ -2,6 +2,7 @@ package au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport;
 
 import com.google.common.base.Function;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -20,5 +21,15 @@ public class TestUtils {
         if (!condition) {
             throw new IllegalStateException(message);
         }
+    }
+
+    public static boolean elementIsPresent(By locator, WebDriver driver) {
+        try {
+            driver.findElement(locator);
+        } catch (NoSuchElementException e) {
+            return false;
+        }
+
+        return true;
     }
 }

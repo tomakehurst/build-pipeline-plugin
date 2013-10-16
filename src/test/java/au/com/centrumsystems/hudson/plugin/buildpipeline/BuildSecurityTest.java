@@ -9,7 +9,6 @@ import hudson.model.Item;
 import hudson.plugins.parameterizedtrigger.AbstractBuildParameters;
 import hudson.security.GlobalMatrixAuthorizationStrategy;
 import hudson.security.Permission;
-import hudson.tasks.BuildTrigger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,7 +55,6 @@ public class BuildSecurityTest {
         authorizationStrategy.add(Item.CONFIGURE, PRIVILEGED_USER);
 
         initialJob = jr.createFreeStyleProject(INITIAL_JOB);
-//        BuildTrigger secondJobTrigger = new BuildTrigger(SECOND_JOB, true);
         BuildPipelineTrigger secondJobTrigger = new BuildPipelineTrigger(SECOND_JOB, Collections.<AbstractBuildParameters>emptyList());
         jr.createFreeStyleProject(SECOND_JOB);
         initialJob.getPublishersList().add(secondJobTrigger);
@@ -80,8 +78,8 @@ public class BuildSecurityTest {
         loginLogoutPage.login(UNPRIVILEGED_USER);
         pipelinePage.open();
 
-        assertFalse("The Run button should not be present",
-                pipelinePage.runButtonIsPresent());
+        assertTrue("The Run button should not be present",
+                pipelinePage.runButtonIsAbsent());
     }
 
     @Test
@@ -94,7 +92,7 @@ public class BuildSecurityTest {
     }
 
     @Test
-    public void shouldNotBeAbleToTriggerDownstreamJobIfNotPermitted() throws Exception {
+    public void manualBuildTriggerShouldNotBeShownIfNotPeritted() throws Exception {
         initialJob.scheduleBuild2(0);
         waitForInitialBuildToSucceed();
 
@@ -106,7 +104,7 @@ public class BuildSecurityTest {
     }
 
     @Test
-    public void shouldBeAbleToTriggerDownstreamJobIfPermitted() throws Exception {
+    public void manualBuildTriggerShouldBeShownIfPermitted() throws Exception {
         initialJob.scheduleBuild2(0);
         waitForInitialBuildToSucceed();
 

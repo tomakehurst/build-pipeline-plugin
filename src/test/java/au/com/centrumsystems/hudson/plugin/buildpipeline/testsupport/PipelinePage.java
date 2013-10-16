@@ -6,6 +6,7 @@ import org.openqa.selenium.WebElement;
 
 import java.net.URL;
 
+import static au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.TestUtils.elementIsPresent;
 import static au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.TestUtils.waitForElement;
 
 public class PipelinePage implements Page {
@@ -27,11 +28,16 @@ public class PipelinePage implements Page {
         return this;
     }
 
-    public boolean runButtonIsPresent() throws Exception {
+    public boolean runButtonIsPresent() {
         return triggerPipelineButton() != null;
     }
 
-    public PipelinePage clickRunButton() throws Exception {
+    public boolean runButtonIsAbsent() {
+        waitForElement(By.xpath("//img[@alt='Pipeline History']"), webDriver);
+        return !elementIsPresent(By.id(TRIGGER_PIPELINE_BUTTON), webDriver);
+    }
+
+    public PipelinePage clickRunButton() {
         triggerPipelineButton().click();
         return this;
     }
