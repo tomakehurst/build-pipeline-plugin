@@ -149,18 +149,4 @@ public class BuildSecurityTest {
         assertTrue("Second card in pipeline should have a retry button",
                 pipelinePage.buildCard(1, 1, 2).hasRetryButton());
     }
-
-    private void waitForBuildToSucceed(FreeStyleProject job) {
-        new FluentWait<FreeStyleProject>(job)
-                .withTimeout(10, TimeUnit.SECONDS)
-                .pollingEvery(100, TimeUnit.MILLISECONDS)
-                .until(new Function<FreeStyleProject, Boolean>() {
-            public Boolean apply(FreeStyleProject job) {
-                return job.getBuilds() != null &&
-                        job.getBuilds().getFirstBuild() != null &&
-                        job.getBuilds().getFirstBuild().getResult() != null &&
-                        job.getBuilds().getFirstBuild().getResult().isBetterOrEqualTo(SUCCESS);
-            }
-        });
-    }
 }
