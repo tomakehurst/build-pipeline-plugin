@@ -1,5 +1,6 @@
 package au.com.centrumsystems.hudson.plugin.buildpipeline;
 
+import au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.BuildCardComponent;
 import au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.LoginLogoutPage;
 import au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.PipelinePage;
 import au.com.centrumsystems.hudson.plugin.buildpipeline.trigger.BuildPipelineTrigger;
@@ -13,6 +14,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -37,8 +39,9 @@ public class BuildSecurityTest {
 
     JenkinsRule.DummySecurityRealm realm;
     FreeStyleProject initialJob;
-    BuildPipelineView pipelineView;
+    FreeStyleProject secondJob;
 
+    BuildPipelineView pipelineView;
     LoginLogoutPage loginLogoutPage;
     PipelinePage pipelinePage;
     private WebDriver webDriver;
@@ -55,11 +58,13 @@ public class BuildSecurityTest {
         authorizationStrategy.add(Item.CONFIGURE, PRIVILEGED_USER);
 
         initialJob = jr.createFreeStyleProject(INITIAL_JOB);
-        BuildPipelineTrigger secondJobTrigger = new BuildPipelineTrigger(SECOND_JOB, Collections.<AbstractBuildParameters>emptyList());
-        jr.createFreeStyleProject(SECOND_JOB);
-        initialJob.getPublishersList().add(secondJobTrigger);
 
-        pipelineView = new BuildPipelineView("pipeline", "Pipeline", new DownstreamProjectGridBuilder(INITIAL_JOB), "5", false, null);
+        secondJob = jr.createFreeStyleProject(SECOND_JOB);
+        secondJob.getBuildersList().add(new FailureBuilder());
+        initialJob.getPublishersList().add(new BuildPipelineTrigger(SECOND_JOB, Collections.<AbstractBuildParameters>emptyList()));
+        jr.jenkins.rebuildDependencyGraph();
+
+        pipelineView = new BuildPipelineView("pipeline", "Pipeline", new DownstreamProjectGridBuilder(INITIAL_JOB), "5", false, true, false, false, false, 1, null);
         jr.jenkins.addView(pipelineView);
 
         webDriver = new FirefoxDriver();
@@ -93,8 +98,7 @@ public class BuildSecurityTest {
 
     @Test
     public void manualBuildTriggerShouldNotBeShownIfNotPeritted() throws Exception {
-        initialJob.scheduleBuild2(0);
-        waitForInitialBuildToSucceed();
+        jr.buildAndAssertSuccess(initialJob);
 
         loginLogoutPage.login(UNPRIVILEGED_USER);
         pipelinePage.open();
@@ -105,8 +109,7 @@ public class BuildSecurityTest {
 
     @Test
     public void manualBuildTriggerShouldBeShownIfPermitted() throws Exception {
-        initialJob.scheduleBuild2(0);
-        waitForInitialBuildToSucceed();
+        jr.buildAndAssertSuccess(initialJob);
 
         loginLogoutPage.login(PRIVILEGED_USER);
         pipelinePage.open();
@@ -115,9 +118,41 @@ public class BuildSecurityTest {
                 pipelinePage.buildCard(1, 1, 2).hasManualTriggerButton());
     }
 
-    private void waitForInitialBuildToSucceed() {
-        new FluentWait<FreeStyleProject>(initialJob)
-                .withTimeout(5, TimeUnit.SECONDS)
+    @Test
+    public void retryButtonShouldNotBeShownIfNotPermitted() throws Exception {
+        jr.buildAndAssertSuccess(initialJob);
+        loginLogoutPage.login(PRIVILEGED_USER);
+        pipelinePage.open();
+        BuildCardComponent secondBuildCard = pipelinePage.buildCard(1, 1, 2);
+        secondBuildCard.clickTriggerButton();
+        secondBuildCard.waitForFailure();
+
+        loginLogoutPage.logout();
+        loginLogoutPage.login(UNPRIVILEGED_USER);
+        pipelinePage.open();
+
+        assertFalse("Second card in pipeline should not have a retry button",
+                pipelinePage.buildCard(1, 1, 2).hasRetryButton());
+    }
+
+    @Test
+    public void retryButtonShouldBeShownIfPermitted() throws Exception {
+        jr.buildAndAssertSuccess(initialJob);
+
+        loginLogoutPage.login(PRIVILEGED_USER);
+        pipelinePage.open();
+
+        BuildCardComponent secondBuildCard = pipelinePage.buildCard(1, 1, 2);
+        secondBuildCard.clickTriggerButton();
+        secondBuildCard.waitForFailure();
+
+        assertTrue("Second card in pipeline should have a retry button",
+                pipelinePage.buildCard(1, 1, 2).hasRetryButton());
+    }
+
+    private void waitForBuildToSucceed(FreeStyleProject job) {
+        new FluentWait<FreeStyleProject>(job)
+                .withTimeout(10, TimeUnit.SECONDS)
                 .pollingEvery(100, TimeUnit.MILLISECONDS)
                 .until(new Function<FreeStyleProject, Boolean>() {
             public Boolean apply(FreeStyleProject job) {

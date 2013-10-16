@@ -7,6 +7,8 @@ import org.openqa.selenium.WebElement;
 import java.net.URL;
 import java.net.URLEncoder;
 
+import static au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.TestUtils.waitForElement;
+
 public class LoginLogoutPage implements Page {
 
     private final URL baseUrl;
@@ -26,11 +28,11 @@ public class LoginLogoutPage implements Page {
     }
 
     private WebElement usernameField() {
-        return driver.findElement(By.name("j_username"));
+        return waitForElement(By.name("j_username"), driver);
     }
 
     private WebElement passwordField() {
-        return driver.findElement(By.name("j_password"));
+        return waitForElement(By.name("j_password"), driver);
     }
 
     public void logout() {

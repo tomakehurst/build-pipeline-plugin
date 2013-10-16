@@ -1,10 +1,8 @@
 package au.com.centrumsystems.hudson.plugin.buildpipeline
 
-import au.com.centrumsystems.hudson.plugin.buildpipeline.PipelineBuild;
 import groovy.json.JsonBuilder
-import hudson.model.Cause;
-import hudson.model.Cause.UserIdCause;
-import hudson.model.Item;
+import hudson.model.Cause
+import hudson.model.Item
 
 class BuildJSONBuilder {
 

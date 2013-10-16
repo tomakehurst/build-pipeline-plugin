@@ -1,13 +1,19 @@
 package au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import java.util.concurrent.TimeUnit;
+
+import static au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.TestUtils.elementIsPresent;
 import static au.com.centrumsystems.hudson.plugin.buildpipeline.testsupport.TestUtils.waitForElement;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class BuildCardComponent {
+
+    private static final String TRIGGER_SPAN_XPATH = "//span[@class='pointer trigger']";
+    private static final String RETRY_IMG_XPATH = "//span[@class='pointer trigger']/img[@alt='retry']";
 
     private final WebDriver webDriver;
     private final int pipelineGroup;
@@ -28,14 +34,20 @@ public class BuildCardComponent {
         return this;
     }
 
-    public boolean hasManualTriggerButton() throws Exception {
-        try {
-            triggerButtonHtmlElement();
-        } catch (NoSuchElementException e) {
-            return false;
-        }
+    public BuildCardComponent waitForFailure() {
+        waitForElement(
+                By.xpath("//table[contains(@class, 'FAILURE')]"),
+                cardWebElement,
+                20, SECONDS);
+        return this;
+    }
 
-        return true;
+    public boolean hasManualTriggerButton() {
+        return elementIsPresent(By.xpath(TRIGGER_SPAN_XPATH), webDriver);
+    }
+
+    public boolean hasRetryButton() {
+        return elementIsPresent(By.xpath(RETRY_IMG_XPATH), webDriver);
     }
 
     public BuildCardComponent clickTriggerButton() throws Exception {
@@ -44,7 +56,7 @@ public class BuildCardComponent {
     }
 
     private WebElement triggerButtonHtmlElement() {
-        return cardWebElement.findElement(By.xpath("//span[@class='pointer trigger']"));
+        return cardWebElement.findElement(By.xpath(TRIGGER_SPAN_XPATH));
     }
 
     private String cardXPath(int pipelineGroup, int pipeline, int card) {
