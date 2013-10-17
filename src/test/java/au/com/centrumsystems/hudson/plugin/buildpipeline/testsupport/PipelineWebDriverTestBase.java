@@ -6,6 +6,7 @@ import hudson.model.FreeStyleProject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
+import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -13,6 +14,7 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 public class PipelineWebDriverTestBase {
 
     protected static final String INITIAL_JOB = "initial-job";
+    protected static final String SECOND_JOB = "second-job";
 
     @Rule
     public JenkinsRule jr = new JenkinsRule();
@@ -37,13 +39,17 @@ public class PipelineWebDriverTestBase {
         webDriver = new FirefoxDriver();
         loginLogoutPage = new LoginLogoutPage(webDriver, jr.getURL());
         pipelinePage = new PipelinePage(webDriver, pipelineView.getViewName(), jr.getURL());
-
-
     }
 
     @After
     public void cleanUpWebDriver() {
         webDriver.close();
         webDriver.quit();
+    }
+
+    protected FreeStyleProject createFailingJob(String name) throws Exception{
+        FreeStyleProject failingJob = jr.createFreeStyleProject(name);
+        failingJob.getBuildersList().add(new FailureBuilder());
+        return failingJob;
     }
 }

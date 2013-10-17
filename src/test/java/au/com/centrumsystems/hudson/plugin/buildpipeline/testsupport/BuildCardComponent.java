@@ -34,9 +34,18 @@ public class BuildCardComponent {
         return this;
     }
 
+    public BuildCardComponent waitForBuildToStart() throws Exception {
+        waitForElement(By.xpath("//table[@class='progress-bar']"), webDriver);
+        return this;
+    }
+
     public BuildCardComponent waitForFailure() {
+        return waitForStatus("FAILURE");
+    }
+
+    public BuildCardComponent waitForStatus(String status) {
         waitForElement(
-                By.xpath("//table[contains(@class, 'FAILURE')]"),
+                By.xpath("//table[contains(@class, '" + status + "')]"),
                 cardWebElement,
                 20, SECONDS);
         return this;

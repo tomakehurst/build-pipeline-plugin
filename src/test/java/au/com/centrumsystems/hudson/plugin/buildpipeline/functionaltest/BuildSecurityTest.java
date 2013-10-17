@@ -10,7 +10,6 @@ import hudson.security.GlobalMatrixAuthorizationStrategy;
 import hudson.security.Permission;
 import org.junit.Before;
 import org.junit.Test;
-import org.jvnet.hudson.test.FailureBuilder;
 
 import java.util.Collections;
 
@@ -19,7 +18,6 @@ import static org.junit.Assert.assertTrue;
 
 public class BuildSecurityTest extends PipelineWebDriverTestBase {
 
-    static final String SECOND_JOB = "second-job";
     static final String UNPRIVILEGED_USER = "unprivilegeduser";
     static final String PRIVILEGED_USER = "privilegeduser";
 
@@ -34,9 +32,8 @@ public class BuildSecurityTest extends PipelineWebDriverTestBase {
         authorizationStrategy.add(Item.BUILD, PRIVILEGED_USER);
         authorizationStrategy.add(Item.CONFIGURE, PRIVILEGED_USER);
 
-        secondJob = jr.createFreeStyleProject(SECOND_JOB);
-        secondJob.getBuildersList().add(new FailureBuilder());
-        initialJob.getPublishersList().add(new BuildPipelineTrigger(SECOND_JOB, Collections.<AbstractBuildParameters>emptyList()));
+        secondJob = createFailingJob(SECOND_JOB);
+        initialJob.getPublishersList().add(new BuildPipelineTrigger(secondJob.getName(), Collections.<AbstractBuildParameters>emptyList()));
         jr.jenkins.rebuildDependencyGraph();
     }
 
